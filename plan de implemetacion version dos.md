@@ -1,94 +1,172 @@
-## 📂 1. Estructura de Proyecto (Clean Architecture Simplificada)
+# 🥖 Panadería Gourmet — Plan de Implementación Profesional
 
-Esta organización separa la **lógica de datos** (Firestore) de la **lógica de negocio** (Modelos/Entidades) y la **interfaz** (UI).
+**Documento de Planificación de Software**
+**Versión 1.0 | Flutter + Firebase | Multiplataforma**
+
+---
+
+> *Este documento describe la arquitectura, tecnologías, diseño y fases de desarrollo de **Panadería Gourmet**, una aplicación multiplataforma diseñada para la gestión de ventas, inventario, producción y pedidos en tiempo real.*
+
+---
+
+## 1. Descripción General del Sistema
+
+### ¿Qué es Panadería Gourmet?
+
+**Panadería Gourmet** es una solución tecnológica integral diseñada para transformar un negocio de panadería tradicional en una operación digital eficiente. El sistema permite gestionar todo el ciclo de vida del producto: desde la materia prima y las categorías de panificación, hasta la venta final al cliente, el control de stock y la facturación.
+
+A diferencia de un simple punto de venta, Panadería Gourmet está orientada a la **trazabilidad y producción**: permite gestionar pedidos por adelantado, controlar existencias de productos perecederos y administrar la relación con proveedores de insumos clave (harina, levadura, etc.).
+
+### Objetivo Principal
+
+El objetivo central es **optimizar la rentabilidad y la experiencia del cliente** a través de:
+
+* **Catálogo Digital Dinámico**: Los productos se agrupan por categorías (Panes, Repostería, Bebidas), permitiendo una exploración visual fluida.
+* **Gestión de Stock Atómica**: Cada venta descuenta automáticamente del inventario, evitando ofrecer productos agotados.
+* **Pedidos y Trazabilidad**: Registro detallado de cada orden, permitiendo saber qué usuario realizó la venta y en qué estado se encuentra el pedido.
+* **Control de Proveedores e Insumos**: Gestión de las entidades que surten la materia prima, vinculando facturas de compra con transacciones de egreso.
+* **Administración Multiplataforma**: El administrador puede ver reportes en una PC (Windows/Web), mientras los vendedores operan desde tablets o móviles (Android/iOS).
+
+---
+
+## 2. Arquitectura del Proyecto
+
+### Arquitectura Recomendada: Clean Architecture + MVVM
+
+Implementaremos **Clean Architecture** para asegurar que la lógica de la panadería (reglas de negocio) sea independiente de la tecnología (Firebase/Flutter).
+
+#### Capa de Presentación (Presentation Layer)
+
+Contiene la UI y la lógica de estado. Aquí es donde los "vendedores" interactúan con el carrito de compras. Utilizamos el patrón **MVVM** donde el *ViewModel* prepara los datos del catálogo para ser mostrados.
+
+#### Capa de Dominio (Domain Layer)
+
+Es la capa más estable. Define qué es un "Producto", un "Pedido" y una "Venta". Contiene los **Casos de Uso** (ej: `RealizarVenta`, `ActualizarStock`, `GenerarFactura`).
+
+#### Capa de Datos (Data Layer)
+
+Gestiona la comunicación con **Firebase**. Aquí se encuentran los modelos que convierten el formato JSON de Firestore en objetos de Dart legibles por la aplicación.
+
+---
+
+### Organización de Carpetas
 
 ```text
-lib/
-├── core/
-│   ├── config/            # Configuración de Firebase y variables de entorno
-│   ├── constants/         # Colores del tema (tierra/crema), strings, assets
-│   ├── router/            # Configuración de GoRouter (rutas protegidas/públicas)
-│   └── utils/             # Validadores de formularios y formateo de moneda (intl)
-├── data/
-│   ├── models/            # DTOs: Mapeo de JSON (Firestore) a objetos Dart
-│   │   ├── user_model.dart
-│   │   ├── product_model.dart
-│   │   └── order_model.dart
-│   ├── repositories/      # Implementación de llamadas a Firebase (CRUD)
-│   └── services/          # Servicios externos (Auth Service, Storage Service)
-├── domain/
-│   ├── entities/          # Clases base de negocio (limpias de lógica Firebase)
-│   └── providers/         # Lógica de estado (Auth, Cart, Inventory) con ChangeNotifier
-├── presentation/
-│   ├── screens/           # Pantallas principales (Home, Login, Checkout)
-│   ├── widgets/           # Componentes reutilizables (ProductCard, CustomButton)
-│   └── theme/             # Definición de ThemeData (Paleta Panadería)
-└── main.dart              # Punto de entrada y MultiProvider
+panaderia_gourmet/
+├── lib/
+│   ├── core/                # Configuración de temas (colores crema/tierra), errores y constantes.
+│   ├── data/                # DTOs (Modelos) y Repositorios (Lógica de Firestore).
+│   ├── domain/              # Entidades puras y Casos de Uso (Lógica de negocio).
+│   ├── presentation/
+│   │   ├── screens/         # Home, Carrito, Perfil, Gestión de Inventario.
+│   │   ├── widgets/         # Tarjetas de pan, botones de cantidad, recibos.
+│   │   └── logic/           # Gestores de estado (Providers).
+│   └── main.dart            # Inicialización de Firebase.
 
 ```
 
 ---
 
-## 🚀 2. Plan de Implementación Optimizado (Fase Técnica)
+## 3. Tecnologías Necesarias
 
-He condensado tu plan para que sea una hoja de ruta de ejecución directa, integrando la lógica de tus tablas de base de datos.
-
-### **Fase A: Cimentación y Auth**
-
-* **Configuración Core:** Inicialización de `FirebaseCore` y `FirebaseOptions`. Configuración del tema visual (Paleta cálida/artesanal).
-* **Módulo de Identidad:** Implementación de Registro/Login basado en tu tabla `usuarios`.
-* *Detalle:* Al registrar en Auth, crear automáticamente el documento en la colección `usuarios` de Firestore para persistir nombre y rol.
-
-
-
-### **Fase B: Gestión de Catálogo (Tu tabla `productos` y `categorias`)**
-
-* **Carga Dinámica:** Implementación de un `ProductProvider` que consuma un `Stream` de Firestore.
-* **Filtrado por Categoría:** Lógica para segmentar productos (Pan, Pastelería, Bebidas) mediante consultas indexadas.
-* **Optimización de Imagen:** Uso de `cached_network_image` para no consumir datos innecesarios del Storage.
-
-### **Fase C: Carrito y Lógica de Pedidos (Tu tabla `pedidos` y `detalle_pedidos`)**
-
-* **Gestión de Estado Local:** El `CartProvider` manejará la lista temporal de productos y el cálculo de totales en memoria.
-* **Transacción de Venta:** Al confirmar, se ejecutan dos acciones:
-1. Creación del documento en la colección `pedidos`.
-2. Escritura de los sub-documentos o arrays en `detalle_pedidos`.
-
-
-* **Control de Stock:** Implementación de lógica para descontar unidades en la colección `productos` tras la compra.
-
-### **Fase D: Panel de Usuario y Historial**
-
-* **Perfil:** Consulta de datos personales y edición de perfil.
-* **Historial de Compras:** Consulta filtrada de la tabla `pedidos` donde `id_usuario == currentUser`.
-
----
-
-## 🛠️ 3. Especificaciones Técnicas de Integración
-
-| Componente | Estrategia de Implementación |
+| Tecnología | Propósito |
 | --- | --- |
-| **Persistencia** | Firestore (Offline persistence habilitada por defecto en móviles). |
-| **Estado Global** | `ChangeNotifierProvider` para Auth y Carrito; `StreamProvider` para catálogo en tiempo real. |
-| **Seguridad** | Reglas de Firestore: `allow read` público para productos; `allow write` solo para dueños del pedido. |
-| **Modelado** | Uso de métodos `fromFirestore()` y `toFirestore()` en cada modelo para sanitizar datos. |
-| **Navegación** | GoRouter para manejar "Deep Linking" (especialmente útil si la panadería se abre desde un link web). |
+| **Flutter 3.x** | Motor multiplataforma para Android, iOS, Web y Windows. |
+| **Dart** | Lenguaje de programación con Null-Safety para evitar errores de sistema. |
+| **Firebase Auth** | Control de acceso para empleados (Vendedores vs Administradores). |
+| **Cloud Firestore** | Base de datos NoSQL para sincronización de pedidos en tiempo real. |
+| **Firebase Storage** | Almacenamiento de fotos de alta resolución del pan y pasteles. |
+| **Provider** | Gestión de estado (manejo del carrito de compras y catálogo). |
 
 ---
 
-## 🎨 4. Lineamientos de Diseño Profesional
+## 4. Diseño UI/UX
 
-* **Identidad Visual:** No usar el azul estándar de Flutter. Definir un `ColorScheme` basado en:
-* `Primary`: #8D6E63 (Marrón café/pan tostado).
-* `Secondary`: #FFF8E1 (Crema/harina).
-* `Surface`: Blanco puro para limpieza visual.
+### Filosofía de Diseño: "Cálida y Artesanal"
+
+La interfaz debe evocar la sensación de una panadería tradicional pero con la eficiencia de una app moderna. Se utilizarán bordes redondeados, sombras suaves y una iconografía clara.
+
+* **Paleta de Colores**:
+* **Primario**: Café Tostado (`#6D4C41`) - Confianza y tradición.
+* **Secundario**: Trigo Dorado (`#FDD835`) - Energía y calidad.
+* **Fondo**: Blanco Crema (`#FFFDF5`) - Limpieza y frescura.
 
 
-* **Micro-interacciones:** Feedback táctil al añadir al carrito y transiciones suaves entre categorías.
+* **Tipografía**: `Playfair Display` para títulos (elegancia artesanal) e `Inter` para datos numéricos y precios (legibilidad).
 
 ---
 
-### 📝 Notas de Arquitectura (Basado en tus tablas)
+## 5. Planeación del Desarrollo (Paso a Paso)
 
-Dado que tienes una tabla de `categorias`, te sugiero que en Firestore no la manejes solo como un string, sino como una **referencia** o una colección independiente para que, si cambias el nombre de una categoría (ej. de "Panes" a "Panadería Artesanal"), se actualice en toda la app automáticamente.
+### Fase 1 — Configuración del Entorno
 
+Instalación del Flutter SDK y configuración de VS Code. Verificación de compilación en navegadores y móviles.
+
+### Fase 2 — Configuración de Firebase
+
+Creación del proyecto en Firebase Console. Vinculación mediante `flutterfire configure`. Habilitación de Authentication y Firestore en modo estándar.
+
+### Fase 3 — Diseño de Base de Datos Firestore (Estructura de Colecciones)
+
+Diseño de documentos basados en tus entidades:
+
+* `/productos/`: Nombre, precio, stock, imagen.
+* `/pedidos/`: ID usuario, fecha, total, estado.
+* `/detalle_pedidos/`: (Como subcolección de pedidos) Producto_id, cantidad, subtotal.
+
+### Fase 4 — Sistema de Autenticación
+
+Implementación de Login con Email y Password. Los usuarios tendrán un `rol` (Admin o Staff) que limitará qué pueden ver (ej: el Staff no puede ver costos de proveedores).
+
+### Fase 5 — Pantallas Principales
+
+Desarrollo del Dashboard (resumen de ventas diarias) y la pantalla de Catálogo con filtros por categoría.
+
+### Fase 6 — CRUD de Entidades
+
+Formularios para agregar nuevos tipos de pan, gestionar proveedores y actualizar cuentas bancarias del negocio.
+
+### Fase 7 — Gestión de Transacciones (El Corazón)
+
+Implementación de la lógica de **Venta Atómica**. Al confirmar un pedido, el sistema debe usar una `Transaction` de Firebase para descontar el stock y crear el pedido al mismo tiempo.
+
+---
+
+## 6. Dependencias Recomendadas
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^latest      # Conector base Firebase
+  cloud_firestore: ^latest    # Base de datos
+  firebase_auth: ^latest     # Seguridad
+  provider: ^latest          # Estado de la app
+  intl: ^latest              # Formato de moneda ($) y fechas
+  cached_network_image: ^latest # Carga rápida de fotos de pan
+
+```
+
+---
+
+## 7. Flujo de Navegación
+
+1. **Login**: Acceso seguro.
+2. **Dashboard**: Resumen de lo que se ha vendido hoy y productos por agotarse.
+3. **Catálogo/Venta**: Selección de panes, ajuste de cantidades y envío al carrito.
+4. **Carrito/Factura**: Resumen de la compra y confirmación de pago.
+5. **Inventario**: Vista para el administrador donde se gestionan proveedores e insumos.
+6. **Perfil**: Configuración y cierre de sesión.
+
+---
+
+## 8. Recomendaciones Profesionales (Senior Tips)
+
+1. **Atomicidad en Ventas**: Nunca descuentes stock mediante una consulta y luego otra. Usa **Transactions** de Firestore para asegurar que si falla el internet a mitad de camino, no se descuente pan que no se vendió.
+2. **Caché de Imágenes**: Las fotos de comida venden mucho. Usa `cached_network_image` para que la app no descargue la foto del "Croissant" cada vez que el usuario abre la pantalla.
+3. **Modo Offline**: Configura Firestore para que guarde los cambios localmente si el internet de la panadería falla, y se sincronice automáticamente al volver la conexión.
+4. **Optimización de Costos**: No traigas todos los pedidos de la historia cada vez. Usa paginación (`limit(20)`) para mostrar solo los pedidos más recientes.
+
+---
+
+**¿Deseas que profundicemos en el código de alguna de las entidades (como el Modelo de Producto o la Lógica del Carrito) basándonos en este plan?**
